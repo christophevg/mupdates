@@ -1,0 +1,2 @@
+#define LIGHT_SENSOR_PORT  DDRA   // PA0
+#define LIGHT_SENSOR_PIN   0

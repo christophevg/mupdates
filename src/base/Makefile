@@ -1,0 +1,19 @@
+INCLUDE_PATH=../..
+MOOSE_PATH=../../moose
+
+MORE_SRC = ${MOOSE_PATH}/avr.c \
+					 ${MOOSE_PATH}/xbee.c \
+					 ${MOOSE_PATH}/clock.c
+
+MCU=atmega1284p
+F_CPU=8000000
+
+AVRDUDE_PROGRAMMER=jtag2
+
+# external hardware composition ... yummie :-)
+MORE_CDEFS=-DSERIAL_ON_USART1
+
+include ${MOOSE_PATH}/Makefile
+
+serial-digitus:
+	screen /dev/tty.usbserial-FTSJ84AI 9600
