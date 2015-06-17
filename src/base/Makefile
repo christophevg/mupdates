@@ -1,4 +1,4 @@
-INCLUDE_PATH=../..
+INCLUDE_PATH=../.. -I ../shared
 MOOSE_PATH=../../moose
 
 MORE_SRC = ${MOOSE_PATH}/avr.c \
