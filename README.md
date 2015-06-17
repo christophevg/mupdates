@@ -60,6 +60,74 @@ int main(void) {
 }
 ```
 
-I've extracted some parts of the code, but this is the entire base application.
+I've extracted some parts of the code, but this is the entire base application. So how big is that?
+
+```bash
+$ avr-objcopy -I ihex -O binary main.hex main.bin
+$ wc -c main.bin
+    6502 main.bin
+```
+
+I use a binary format, to remove all excess baggage due to formatting etc.
+
+## Adding Alerts
+
+Now we want to add alerting functionality, which sends out and alert if the reading passes a certain threshold. The diff summarizes the changes...
+
+```bash
+$ diff -u main.c ../alert/main.c 
+--- main.c	2015-06-17 14:59:49.000000000 +0200
++++ ../alert/main.c	2015-06-17 16:18:18.000000000 +0200
+@@ -5,6 +5,18 @@
+ #include "light_sensor_config.h"
+ #include "xbee_send_to_coordinator.h"
+ 
++#include <string.h>
++
++void xbee_send_string(const char* str) {
++  xbee_send_bytes((uint8_t*)str, strlen(str));
++}
++
++void alert(uint16_t light_reading) {
++  if(light_reading > 700) {
++    xbee_send_string("alert, light above 700");
++  }
++}
++
+ int main(void) {
+   avr_init();
+   avr_adc_init();
+@@ -22,6 +34,7 @@
+   while(TRUE) {
+     light.reading = avr_adc_read(LIGHT_SENSOR_PIN);
+     xbee_send_bytes(light.bytes, 2);
++    alert(light.reading);
+     _delay_ms(60000L);
+   }
+```
+
+So what does that look like in binary?
+
+```bash
+$ avr-objcopy -I ihex -O binary main.hex main.bin
+$ wc -c main.bin
+    6568 main.bin
+```
+
+That's 66 bytes more than the base application. Makes sense, but what's the actual difference? I first launched my Hex Friend. Just from the looks of it, it seems _a lot_ has changed. About 275 changes were detected.
+
+<p align="center">
+<img src="media/hex-friend-base-alert.png">
+</p>
+
+I believe that <tt>bsdiff</tt> ([http://www.daemonology.net/bsdiff/](http://www.daemonology.net/bsdiff/)) can be considered representative for creating small binary diffs:
+
+```bash
+$ bsdiff ../base/main.bin main.bin main.diff
+$ wc -c main.diff
+     571 main.diff
+```
+
+Let's not take into account that <tt>bspatch</tt> requires <tt>bzip2</tt> and _n+m+O(1)_ bytes of memory,... and simply look at the bytes that would get send over the network to our _thing_: In stead of 6568 bytes for an entire new image, we could send a mere 571 bytes, or only about 8,70%.
 
 _more to come..._
